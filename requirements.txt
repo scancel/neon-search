@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+opensearch-py
+sentence-transformers
+boto3
+pandas
+python-multipart
+openai

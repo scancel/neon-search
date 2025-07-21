@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Security - AI Search</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use the Inter font family */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for a subtle background pattern */
+        body {
+            background-color: #f8fafc; /* slate-50 */
+        }
+        /* Custom focus ring color */
+        .focus-ring-purple {
+            --tw-ring-opacity: 1;
+            --tw-ring-color: rgb(168 85 247 / var(--tw-ring-opacity)); /* purple-500 */
+        }
+        .focus-ring-purple:focus {
+            border-color: rgb(168 85 247 / var(--tw-ring-opacity));
+            box-shadow: 0 0 0 3px rgb(192 132 252 / 0.5); /* purple-400 with opacity */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Top Bar for Logo -->
+    <div class="bg-white border-b border-slate-200">
+        <div class="container mx-auto max-w-4xl p-4">
+            <img src="https://neonsecurity.ai/neon_logo_final.png" alt="Neon Security Logo" class="h-8">
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-4xl p-4 md:p-8">
+
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <div class="inline-block bg-purple-100 text-purple-600 p-3 rounded-xl mb-4">
+                <!-- Sparkle Icon SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Find Anyone, Instantly</h1>
+            <p class="text-slate-500 mt-2">Ask questions in plain English. Our AI understands what you're looking for.</p>
+        </header>
+
+        <!-- Search Bar Section -->
+        <div class="mb-8">
+            <form id="search-form" class="flex flex-col sm:flex-row gap-2">
+                <input type="text" id="search-input" placeholder="Users living in Europe" class="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus-ring-purple transition-shadow">
+                <button type="submit" id="search-button" class="flex items-center justify-center bg-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:bg-purple-700 focus:outline-none focus-ring-purple transition-colors disabled:bg-purple-300">
+                    <!-- Search Icon SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Example Searches Section -->
+        <div id="example-searches" class="flex flex-wrap gap-2 justify-center text-sm text-slate-500">
+            <span class="font-semibold mr-2 text-slate-600">Try:</span>
+            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Find software engineers in California</button>
+            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Marketing professionals under 30</button>
+            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">People who worked in healthcare analytics</button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="mt-12">
+            <!-- Loading Spinner (shown during search) -->
+            <div id="loading-spinner" class="hidden text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <p class="mt-2 text-slate-500">Searching...</p>
+            </div>
+
+            <!-- Error Message (shown on failure) -->
+            <div id="error-message" class="hidden text-center bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
+                <p class="font-bold">Search Failed</p>
+                <p id="error-text" class="text-sm">Could not connect to the search service.</p>
+            </div>
+
+            <!-- Results Header (shown on success) -->
+            <div id="results-header" class="hidden mb-4">
+                <h2 class="text-2xl font-bold text-slate-900">Found <span id="results-count">0</span> users for "<span id="query-display" class="text-purple-600"></span>"</h2>
+            </div>
+            
+            <!-- Results Container (populated with result cards) -->
+            <div id="results-container" class="space-y-4">
+                <!-- Search result cards will be injected here by JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // IMPORTANT: Change this URL to your deployed FastAPI backend's URL.
+        // For local development, it's typically http://127.0.0.1:8000
+        // For your deployed AWS ALB, it will be the DNS name from Terraform output.
+        const API_BASE_URL = "http://127.0.0.1:8000";
+
+        // --- DOM Element References ---
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const exampleButtons = document.querySelectorAll('.example-query');
+
+        const resultsSection = document.getElementById('results-section');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        
+        const resultsHeader = document.getElementById('results-header');
+        const resultsCount = document.getElementById('results-count');
+        const queryDisplay = document.getElementById('query-display');
+        const resultsContainer = document.getElementById('results-container');
+
+        // --- Event Listeners ---
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                performSearch(query);
+            }
+        });
+
+        exampleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const query = button.textContent;
+                searchInput.value = query;
+                performSearch(query);
+            });
+        });
+
+        /**
+         * Main function to perform the search.
+         * @param {string} queryText The user's search query.
+         */
+        async function performSearch(queryText) {
+            // 1. Set UI to loading state
+            searchButton.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+            resultsHeader.classList.add('hidden');
+            resultsContainer.innerHTML = ''; // Clear previous results
+
+            try {
+                // 2. Make the API call to the FastAPI backend
+                const response = await fetch(`${API_BASE_URL}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query_text: queryText, top_k: 10 }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const results = await response.json();
+
+                // 3. Render the results
+                displayResults(results, queryText);
+
+            } catch (error) {
+                // 4. Handle errors
+                console.error('Search failed:', error);
+                errorText.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                // 5. Reset UI from loading state
+                loadingSpinner.classList.add('hidden');
+                searchButton.disabled = false;
+            }
+        }
+
+        /**
+         * Renders the search results into the DOM.
+         * @param {Array} results An array of search result objects from the API.
+         * @param {string} queryText The original query text.
+         */
+        function displayResults(results, queryText) {
+            // Update results header
+            resultsCount.textContent = results.length;
+            queryDisplay.textContent = queryText;
+            resultsHeader.classList.remove('hidden');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-sm"><p class="text-slate-500">No users found matching your query.</p></div>`;
+                return;
+            }
+            
+            // Create and append a card for each result
+            results.forEach(result => {
+                const card = createResultCard(result.profile, result.explanation);
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        /**
+         * Creates a single HTML element for a search result card.
+         * @param {object} profile The user profile object.
+         * @param {string} explanation The explanation for the match.
+         * @returns {HTMLElement} A div element representing the result card.
+         */
+        function createResultCard(profile, explanation) {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-6 rounded-lg shadow-sm border border-slate-200';
+            
+            const initial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+            const skillsHTML = profile.skills.map(skill => `<span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded-full">${skill}</span>`).join(' ');
+
+            card.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-purple-100 text-purple-600 flex items-center justify-center rounded-full text-xl font-bold">
+                        ${initial}
+                    </div>
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-semibold text-slate-900">${profile.name || 'N/A'}</h3>
+                        <p class="text-sm text-slate-500">${profile.role || 'No role specified'}</p>
+                        <p class="text-sm text-slate-500">${profile.location || 'No location specified'}</p>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-50 rounded-md border border-slate-200">
+                    <p class="text-sm text-slate-600"><span class="font-semibold">Why this matches:</span> ${explanation}</p>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-slate-600">${profile.notes || ''}</p>
+                </div>
+                ${profile.skills.length > 0 ? `<div class="mt-4 flex flex-wrap gap-2">${skillsHTML}</div>` : ''}
+            `;
+            return card;
+        }
+    </script>
+</body>
+</html>
