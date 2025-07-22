@@ -131,7 +131,7 @@ OPENSEARCH_PASSWORD='YourStrongP@ssw0rd!'
 OPENAI_API_KEY='sk-...'
 ```
 
-### 3. Deploy the Infrastructure
+### 3. Cloud Deployment (AWS with Terraform)
 
 You can deploy the AWS infrastructure using the provided Terraform scripts.
 
@@ -178,7 +178,7 @@ Now that you have the image URI, update the `ecr_image_uri` variable in your `te
 
 ```bash
 # Package the Lambda function
-cd ingestion_lambda && pip install -r requirements.txt -t . && zip -r ../ingestion_lambda.zip . && cd ..
+cd tools && bash pack-lambda.sh
 
 # Deploy all resources
 terraform apply
@@ -199,6 +199,73 @@ The application will be available at `http://127.0.0.1:8000`.
 ### 5. Ingest Data
 
 To populate your search engine, upload your `.txt`, `.csv`, or `.json` files to the S3 bucket created by Terraform. The Lambda function will automatically process and index them.
+
+## Full Local Development Setup (Docker)
+
+This is the recommended way to run the project for local development. It uses Docker Compose to create a self-contained environment that mirrors the cloud architecture without any AWS costs.
+
+### Prerequisites
+
+* Docker Desktop installed and running.
+* An OpenAI API Key.
+
+### 1. Prepare Environment
+
+**a. Create `.env.local` file:**
+Create a file named `.env.local` in the project root. This will hold your local configuration.
+
+```
+# .env.local
+OPENSEARCH_HOST=opensearch
+OPENSEARCH_USER=
+OPENSEARCH_PASSWORD=
+AWS_ENDPOINT_URL=http://localstack:4566
+OPENAI_API_KEY=sk-...
+```
+
+**b. Package the Lambda function:**
+The `docker-compose.yml` file needs a zipped version of the ingestion code.
+
+```bash
+# Ensure you are in the project root
+cd tools && bash pack-lambda.sh
+```
+
+### 2. Run the Environment
+
+Start all services (API, OpenSearch, LocalStack) in the background.
+
+```bash
+docker-compose up -d --build
+```
+* The first time you run this, it will download the necessary Docker images, which may take a few minutes.
+* You can view logs for all services with `docker-compose logs -f`.
+
+### 3. Ingest Data Locally
+
+To populate your local OpenSearch instance, use the `local_ingest.py` script. This script uploads a file to the local S3 (in LocalStack), which in turn triggers the local Lambda function.
+
+```bash
+# Example: Ingest a sample CSV file
+python tools/local_ingest.py data/users.csv
+```
+
+### 4. Access the Application
+
+* **GUI:** Open your browser to `http://localhost:8000`
+* **API Docs:** `http://localhost:8000/docs`
+* **OpenSearch:** `http://localhost:9200` (You can use this to directly inspect your index)
+
+### 5. Shut Down the Environment
+
+When you're finished, you can stop and remove the containers.
+
+```bash
+docker-compose down
+```
+
+---
+
 
 ## API Usage
 

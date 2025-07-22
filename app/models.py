@@ -1,6 +1,4 @@
 # ------------------------------------------------------------------
-# app/models.py
-#
 # Pydantic models for API request/response validation and data structures.
 # ------------------------------------------------------------------
 from typing import Any, Dict, List, Optional

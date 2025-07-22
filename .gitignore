@@ -26,6 +26,7 @@ var/
 # Environment variables
 .env
 .env.*
+!.env.sample
 
 # Terraform
 .terraform/
@@ -55,3 +56,4 @@ Thumbs.db
 
 # Packages
 ingestion_lambda/packages/
+lambda_layers/

@@ -1,6 +1,4 @@
 # ------------------------------------------------------------------
-# ingestion_lambda/main.py
-#
 # AWS Lambda function for processing and indexing data from S3.
 # This code would be packaged and deployed as a Lambda function.
 # ------------------------------------------------------------------
@@ -11,29 +9,59 @@ import uuid
 
 import boto3
 import pandas as pd
-from opensearchpy import AWSV4SignerAuth, OpenSearch, RequestsHttpConnection
+from opensearchpy import OpenSearch, RequestsHttpConnection
 from sentence_transformers import SentenceTransformer
 
-# --- Setup (outside the handler for reuse) ---
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Load environment variables
+# --- Environment-aware Setup ---
 OPENSEARCH_HOST = os.environ["OPENSEARCH_HOST"]
 OPENSEARCH_INDEX = os.environ.get("OPENSEARCH_INDEX", "user-profiles")
+AWS_ENDPOINT_URL = os.environ.get("AWS_ENDPOINT_URL")  # Will be set by LocalStack
 
-# Initialize clients and models
-s3_client = boto3.client("s3")
-credentials = boto3.Session().get_credentials()
-auth = AWSV4SignerAuth(credentials, os.environ["AWS_REGION"], "es")
 
-opensearch_client = OpenSearch(
-    hosts=[{"host": OPENSEARCH_HOST, "port": 443}],
-    http_auth=auth,
-    use_ssl=True,
-    verify_certs=True,
-    connection_class=RequestsHttpConnection,
-)
+def get_boto_client(service_name):
+    """Returns a boto3 client, configured for LocalStack if applicable."""
+    if AWS_ENDPOINT_URL:
+        logger.info(f"Connecting to local {service_name} at {AWS_ENDPOINT_URL}")
+        return boto3.client(
+            service_name,
+            endpoint_url=AWS_ENDPOINT_URL,
+            aws_access_key_id="test",
+            aws_secret_access_key="test",
+            region_name="us-east-1",
+        )
+    else:  # Cloud environment
+        return boto3.client(service_name)
+
+
+def get_opensearch_client_lambda():
+    """Returns an OpenSearch client for the Lambda environment."""
+    if AWS_ENDPOINT_URL:  # LocalStack
+        return OpenSearch(
+            hosts=[{"host": OPENSEARCH_HOST, "port": 9200}],
+            http_auth=None,
+            use_ssl=False,
+            verify_certs=False,
+            connection_class=RequestsHttpConnection,
+        )
+    else:  # Cloud (IAM auth)
+        from opensearchpy import AWSV4SignerAuth
+
+        credentials = boto3.Session().get_credentials()
+        auth = AWSV4SignerAuth(credentials, os.environ["AWS_REGION"], "es")
+        return OpenSearch(
+            hosts=[{"host": OPENSEARCH_HOST, "port": 443}],
+            http_auth=auth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+        )
+
+
+s3_client = get_boto_client("s3")
+opensearch_client = get_opensearch_client_lambda()
 
 # Models are loaded from a Lambda Layer or included in the deployment package
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")

@@ -1,6 +1,4 @@
 # ------------------------------------------------------------------
-# main.tf
-#
 # Defines the complete AWS infrastructure for the AI Search application.
 # This includes networking, security, S3, OpenSearch, Lambda, and Fargate.
 # ------------------------------------------------------------------

@@ -1,6 +1,4 @@
 # ------------------------------------------------------------------
-# app/config.py
-#
 # Manages application configuration using environment variables.
 # ------------------------------------------------------------------
 from typing import Optional

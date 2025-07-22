@@ -1,7 +1,10 @@
+# ------------------------------------------------------------------
+# Contains the core logic for performing the hybrid search with LLM analysis.
+# ------------------------------------------------------------------
 import json
 import logging
 
-import openai
+from openai import AsyncOpenAI
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from sentence_transformers import SentenceTransformer
 
@@ -9,16 +12,35 @@ from .config import settings
 from .models import SearchResult
 
 logger = logging.getLogger(__name__)
+aclient = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+# --- Initialize Clients and Models ---
+def get_opensearch_client():
+    """Initializes and returns an OpenSearch client based on environment."""
+    if settings.OPENSEARCH_HOST == "opensearch":  # Local Docker environment
+        logger.info("Connecting to local OpenSearch...")
+        return OpenSearch(
+            hosts=[{"host": settings.OPENSEARCH_HOST, "port": 9200}],
+            http_auth=None,
+            use_ssl=False,
+            verify_certs=False,
+            connection_class=RequestsHttpConnection,
+        )
+    else:  # Cloud environment
+        logger.info("Connecting to cloud OpenSearch...")
+        return OpenSearch(
+            hosts=[{"host": settings.OPENSEARCH_HOST, "port": 443}],
+            http_auth=(settings.OPENSEARCH_USER, settings.OPENSEARCH_PASSWORD),
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+        )
+
 
 # --- Initialize Clients and Models ---
 try:
-    opensearch_client = OpenSearch(
-        hosts=[{"host": settings.OPENSEARCH_HOST, "port": 443}],
-        http_auth=(settings.OPENSEARCH_USER, settings.OPENSEARCH_PASSWORD),
-        use_ssl=True,
-        verify_certs=True,
-        connection_class=RequestsHttpConnection,
-    )
+    opensearch_client = get_opensearch_client()
     logger.info("OpenSearch client initialized.")
 except Exception as e:
     logger.error(f"Failed to initialize OpenSearch client: {e}", exc_info=True)
@@ -32,7 +54,6 @@ except Exception as e:
     embedding_model = None
 
 if settings.OPENAI_API_KEY:
-    openai.api_key = settings.OPENAI_API_KEY
     logger.info("OpenAI client configured.")
 
 
@@ -59,7 +80,7 @@ async def get_structured_filters_from_llm(query_text: str) -> dict:
 
     try:
         logger.info("Requesting structured filters from LLM...")
-        response = await openai.ChatCompletion.acreate(
+        response = await aclient.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},

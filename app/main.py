@@ -1,6 +1,4 @@
 # ------------------------------------------------------------------
-# app/main.py
-#
 # Main FastAPI application file. Defines API endpoints and startup logic.
 # ------------------------------------------------------------------
 import logging
@@ -8,8 +6,6 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
-
-# Add these new imports
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings

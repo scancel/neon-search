@@ -1,0 +1,77 @@
+# Defines the local development environment using Docker Compose.
+# Run with `docker-compose up -d --build`
+
+version: '3.8'
+
+services:
+  # Our FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: neon-search-api
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app:/code/app # Mount the app directory for hot-reloading
+    env_file:
+      - .env.local # Load local environment variables
+    depends_on:
+      - opensearch
+      - localstack
+    networks:
+      - local-dev-net
+
+  # OpenSearch for local search and indexing
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: opensearch-node
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Recommended for development
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true" # Disables security for easy local access
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600" # for performance analyzer
+    networks:
+      - local-dev-net
+
+  # LocalStack to emulate AWS services (S3, Lambda)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack-main
+    ports:
+      - "4566:4566" # Main gateway for all services
+    environment:
+      - SERVICES=s3,lambda
+      - DEBUG=0
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEFAULT_REGION=us-east-1
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./tools/localstack:/etc/localstack/init/ready.d" # Mount init scripts
+      - "./ingestion_lambda.zip:/tmp/ingestion_lambda.zip" # Mount Lambda code
+    networks:
+      - local-dev-net
+
+networks:
+  local-dev-net:
+    driver: bridge
+
+volumes:
+  opensearch-data:
+    driver: local
