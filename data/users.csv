@@ -1,0 +1,13 @@
+name,location,role,skills,experience_years
+Alice,New York,ML Engineer,"PyTorch,NLP,TensorFlow",4
+Bob Smith,San Diego,Frontend Developer,"React,TypeScript",5
+Chen Wei,Shanghai,Data Scientist,"Pandas,Scikit-learn,SQL",3
+John Doe,Berlin,Backend Engineer,"Kubernetes,Python,Cloud Infrastructure",8
+Eva Müller,Munich,Data Scientist,"SQL,Python,scikit-learn,data visualization",6
+Sofia Martinez,Barcelona,Software Engineer,"JavaScript,Python,React,Node.js",5
+Maria Rossi,Milan,UX Designer,"Figma,Adobe Creative Suite,User Research",7
+Emma Thompson,London,Digital Marketing Manager,"SEO,Google Ads,Content Strategy",4
+David Lee,Seoul,Product Manager,"Agile,JIRA,Roadmapping",6
+Fatima Al-Fassi,Dubai,Cloud Architect,"AWS,Azure,GCP",10
+Kenji Tanaka,Tokyo,DevOps Engineer,"Docker,Jenkins,Terraform",5
+Priya Sharma,Bangalore,AI Researcher,"Deep Learning,Computer Vision,PyTorch",3

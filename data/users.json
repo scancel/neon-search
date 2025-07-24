@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Alice",
+    "location": "New York",
+    "role": "ML Engineer",
+    "skills": ["PyTorch", "NLP", "TensorFlow"],
+    "experience_years": 4
+  },
+  {
+    "name": "Bob Smith",
+    "location": "San Diego",
+    "role": "Frontend Developer",
+    "skills": ["React", "TypeScript"],
+    "experience_years": 5
+  },
+  {
+    "name": "Chen Wei",
+    "location": "Shanghai",
+    "role": "Data Scientist",
+    "skills": ["Pandas", "Scikit-learn", "SQL"],
+    "experience_years": 3
+  },
+  {
+    "name": "John Doe",
+    "location": "Berlin",
+    "role": "Backend Engineer",
+    "skills": ["Kubernetes", "Python", "Cloud Infrastructure"],
+    "experience_years": 8
+  },
+  {
+    "name": "Eva Müller",
+    "location": "Munich",
+    "role": "Data Scientist",
+    "skills": ["SQL", "Python", "scikit-learn", "data visualization"],
+    "experience_years": 6
+  },
+  {
+    "name": "Sofia Martinez",
+    "location": "Barcelona",
+    "role": "Software Engineer",
+    "skills": ["JavaScript", "Python", "React", "Node.js"],
+    "experience_years": 5
+  },
+  {
+    "name": "Maria Rossi",
+    "location": "Milan",
+    "role": "UX Designer",
+    "skills": ["Figma", "Adobe Creative Suite", "User Research"],
+    "experience_years": 7
+  },
+  {
+    "name": "Emma Thompson",
+    "location": "London",
+    "role": "Digital Marketing Manager",
+    "skills": ["SEO", "Google Ads", "Content Strategy"],
+    "experience_years": 4
+  },
+  {
+    "name": "David Lee",
+    "location": "Seoul",
+    "role": "Product Manager",
+    "skills": ["Agile", "JIRA", "Roadmapping"],
+    "experience_years": 6
+  },
+  {
+    "name": "Fatima Al-Fassi",
+    "location": "Dubai",
+    "role": "Cloud Architect",
+    "skills": ["AWS", "Azure", "GCP"],
+    "experience_years": 10
+  },
+  {
+    "name": "Kenji Tanaka",
+    "location": "Tokyo",
+    "role": "DevOps Engineer",
+    "skills": ["Docker", "Jenkins", "Terraform"],
+    "experience_years": 5
+  },
+  {
+    "name": "Priya Sharma",
+    "location": "Bangalore",
+    "role": "AI Researcher",
+    "skills": ["Deep Learning", "Computer Vision", "PyTorch"],
+    "experience_years": 3
+  }
+]
