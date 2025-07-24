@@ -1,4 +1,6 @@
 # ------------------------------------------------------------------
+# main.tf
+#
 # Defines the complete AWS infrastructure for the AI Search application.
 # This includes networking, security, S3, OpenSearch, Lambda, and Fargate.
 # ------------------------------------------------------------------
@@ -111,18 +113,11 @@ resource "aws_s3_bucket" "data_source_bucket" {
 resource "aws_opensearch_domain" "search_cluster" {
   domain_name    = "${var.project_name}-search"
   engine_version = "OpenSearch_2.11"
-  
-  node_to_node_encryption {
-    enabled = true
-  }
 
   cluster_config {
     instance_type = "t3.small.search"
     instance_count = 2
     zone_awareness_enabled = true
-    zone_awareness_config {
-      availability_zone_count = 2
-    }
   }
 
   ebs_options {
@@ -204,6 +199,11 @@ resource "aws_iam_policy" "lambda_policy" {
         Action   = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"],
         Effect   = "Allow",
         Resource = "*"
+      },
+      {
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:*"
       }
     ]
   })
@@ -240,16 +240,23 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 # ------------------------------------------------------------------
 # INGESTION COMPUTE (AWS Lambda)
 # ------------------------------------------------------------------
+# ECR Repository for the Lambda container image
+resource "aws_ecr_repository" "lambda_repo" {
+  name = "${var.project_name}-lambda-repo"
+}
+
+# Create CloudWatch Logs group for Lambda
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  name              = "/aws/lambda/${var.project_name}-ingestion-processor"
+  retention_in_days = 14
+}
+
 resource "aws_lambda_function" "ingestion_processor" {
   function_name = "${var.project_name}-ingestion-processor"
   role          = aws_iam_role.lambda_ingestion_role.arn
-  handler       = "main.handler"
-  runtime       = "python3.11"
+  package_type  = "Image"
+  image_uri     = var.lambda_image_uri # Pass the image URI as a variable
   timeout       = 300 # 5 minutes for model loading and processing
-
-  # Assumes you have created 'ingestion_lambda.zip' in the project root
-  filename         = "ingestion_lambda.zip"
-  source_code_hash = filebase64sha256("ingestion_lambda.zip")
 
   vpc_config {
     subnet_ids         = module.vpc.private_subnets
@@ -309,7 +316,7 @@ resource "aws_ecs_task_definition" "api_task" {
 
   container_definitions = jsonencode([{
     name      = "${var.project_name}-container"
-    image     = var.ecr_image_uri # IMPORTANT: Pass the image URI as a variable
+    image     = var.api_image_uri # IMPORTANT: Pass the image URI as a variable
     cpu       = 1024
     memory    = 2048
     essential = true

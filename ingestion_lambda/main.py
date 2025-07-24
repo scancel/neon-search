@@ -108,19 +108,30 @@ def handler(event, context):
 
 
 def parse_json(content, source_file):
-    """Parses a JSON file containing a single user profile."""
+    """Parses a JSON file containing one or more user profiles."""
     data = json.loads(content)
-    profile = {
-        "id": data.get("user_id", str(uuid.uuid4())),
-        "name": data.get("full_name"),
-        "location": data.get("location"),
-        "role": data.get("job_title"),
-        "skills": data.get("skills", []),
-        "notes": data.get("notes"),
-        "source_file": source_file,
-        "raw_data": data,
-    }
-    return [profile]
+    profiles = []
+    
+    # Handle both single object and array of objects
+    if isinstance(data, list):
+        items = data
+    else:
+        items = [data]
+        
+    for item in items:
+        profile = {
+            "id": item.get("user_id", str(uuid.uuid4())),
+            "name": item.get("name", item.get("full_name")),
+            "location": item.get("location"),
+            "role": item.get("role", item.get("job_title")),
+            "skills": item.get("skills", []),
+            "notes": item.get("notes"),
+            "source_file": source_file,
+            "raw_data": item,
+        }
+        profiles.append(profile)
+    
+    return profiles
 
 
 def parse_csv(content, source_file):

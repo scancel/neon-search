@@ -1,244 +1,295 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Security - AI Search</title>
-    <!-- Tailwind CSS for styling -->
+    <title>Neon Security - AI Search Solution Dashboard</title>
+    <!-- Chosen Palette: Technical Blue & Neutral Grays -->
+    <!-- Application Structure Plan: A single-page dashboard designed for a technical leadership review. The information architecture is task-oriented, allowing a user to quickly grasp the solution's design and rationale. It features a sticky sidebar for navigation between key sections: 1. **Overview**: A high-level summary of the project's value. 2. **Live Architecture**: An interactive diagram where clicking on a component reveals the technical justification for its use. 3. **Performance Insights**: Data visualizations explaining key engineering trade-offs (e.g., Fargate vs. Lambda for latency, hybrid search efficiency). 4. **Live Demo**: An embedded, functional UI to demonstrate the final product. This structure was chosen to facilitate a deep-dive technical discussion, prioritizing engineering insights over a simple narrative. -->
+    <!-- Visualization & Content Choices: 
+        - Architecture Diagram: (Goal: Inform/Organize) An interactive diagram built with HTML/CSS/JS. Clicking a node reveals a modal with detailed text on the component's role and the reasoning behind its selection. This is more insightful than a static image.
+        - Latency Chart (Bar): (Goal: Compare) A Chart.js bar chart comparing the "always-on" low latency of Fargate with the "cold start" problem of Lambda for the API endpoint. Justification: Visually proves a critical performance decision.
+        - Hybrid Search Funnel (Diagram): (Goal: Explain Process) A CSS-based diagram that shows how the search space is narrowed from millions of documents to a few relevant results, explaining the efficiency of the filter-then-rank strategy.
+        - Live Demo: (Goal: Demonstrate) The actual search UI, embedded in a section to provide a hands-on proof-of-concept.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Use the Inter font family */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom styles for a subtle background pattern */
-        body {
-            background-color: #f8fafc; /* slate-50 */
-        }
-        /* Custom focus ring color */
-        .focus-ring-purple {
-            --tw-ring-opacity: 1;
-            --tw-ring-color: rgb(168 85 247 / var(--tw-ring-opacity)); /* purple-500 */
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .nav-link.active { background-color: #e0f2fe; color: #0c4a6e; font-weight: 600; }
+        .arch-node { cursor: pointer; transition: all 0.2s ease-in-out; }
+        .arch-node:hover { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
         .focus-ring-purple:focus {
+            --tw-ring-opacity: 1;
+            box-shadow: 0 0 0 3px rgb(192 132 252 / 0.5);
             border-color: rgb(168 85 247 / var(--tw-ring-opacity));
-            box-shadow: 0 0 0 3px rgb(192 132 252 / 0.5); /* purple-400 with opacity */
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-100 text-slate-800">
 
-    <!-- Top Bar for Logo -->
-    <div class="bg-white border-b border-slate-200">
-        <div class="container mx-auto max-w-4xl p-4">
-            <img src="https://neonsecurity.ai/neon_logo_final.png" alt="Neon Security Logo" class="h-8">
-        </div>
+    <div class="flex">
+        <!-- Sticky Sidebar Navigation -->
+        <aside class="w-64 bg-white h-screen sticky top-0 border-r border-slate-200 p-6 hidden lg:flex flex-col">
+            <div>
+                <div class="flex items-center gap-2 mb-8">
+                    <div class="w-8 h-8 bg-sky-600 rounded-lg"></div>
+                    <h1 class="font-bold text-lg text-slate-800">Solution Dashboard</h1>
+                </div>
+                <nav class="flex flex-col gap-2">
+                    <a href="#overview" class="nav-link text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50">🔹 Overview</a>
+                    <a href="#architecture" class="nav-link text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50">🔹 Architecture</a>
+                    <a href="#performance" class="nav-link text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50">🔹 Performance Insights</a>
+                    <a href="#demo" class="nav-link text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50">🔹 Live Demo</a>
+                </nav>
+            </div>
+            <div class="mt-auto">
+                 <a href="https://github.com/scancel/neon-search" target="_blank" class="nav-link text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 flex items-center gap-2">
+                    <span>💻</span>
+                    <span>View on GitHub</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10">
+            <!-- Overview Section -->
+            <section id="overview" class="mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">AI Search Engine: Solution Overview</h2>
+                <p class="text-slate-600 mb-6">This dashboard presents the technical solution for the Neon Security challenge. It showcases an event-driven, serverless architecture designed for scalability, performance, and cost-efficiency, capable of delivering semantic search across heterogeneous data sources.</p>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-3xl mb-2">⚡️</p>
+                        <h3 class="font-semibold text-slate-800">Low-Latency API</h3>
+                        <p class="text-sm text-slate-500">Always-on Fargate container ensures instant API responses, avoiding Lambda cold starts for a superior user experience.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-3xl mb-2">🧩</p>
+                        <h3 class="font-semibold text-slate-800">Hybrid Search</h3>
+                        <p class="text-sm text-slate-500">Combines keyword filtering with vector search to deliver highly relevant results with maximum efficiency.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-3xl mb-2">🏗️</p>
+                        <h3 class="font-semibold text-slate-800">Infrastructure as Code</h3>
+                        <p class="text-sm text-slate-500">Entire AWS stack is defined in Terraform for repeatable, version-controlled, and error-free deployments.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture" class="mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Live Architecture Diagram</h2>
+                <p class="text-slate-600 mb-8">This is an interactive diagram of the solution architecture. Click on any component to see the technical justification and design choices behind it.</p>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center">
+                        <div class="space-y-4">
+                            <div id="node-s3" class="arch-node bg-slate-100 p-4 rounded-lg border-2 border-slate-300"><p class="font-bold">S3 Bucket</p><p class="text-xs">Raw Data Storage</p></div>
+                            <p class="text-2xl text-slate-400">⬇️</p>
+                            <div id="node-lambda" class="arch-node bg-slate-100 p-4 rounded-lg border-2 border-slate-300"><p class="font-bold">AWS Lambda</p><p class="text-xs">Ingestion Processor</p></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div id="node-opensearch" class="arch-node bg-sky-100 p-4 rounded-lg border-2 border-sky-300"><p class="font-bold">Amazon OpenSearch</p><p class="text-xs">Hybrid Search Index</p></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div id="node-fargate" class="arch-node bg-slate-100 p-4 rounded-lg border-2 border-slate-300"><p class="font-bold">AWS Fargate</p><p class="text-xs">FastAPI Backend</p></div>
+                            <p class="text-2xl text-slate-400">⬆️</p>
+                            <div id="node-alb" class="arch-node bg-slate-100 p-4 rounded-lg border-2 border-slate-300"><p class="font-bold">Load Balancer</p><p class="text-xs">Traffic Entry Point</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance Insights Section -->
+            <section id="performance" class="mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Performance & Efficiency Insights</h2>
+                <p class="text-slate-600 mb-8">The architecture was designed to meet key non-functional requirements like low latency, cost efficiency, and scalability. The following visualizations explain these critical design decisions.</p>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="font-semibold text-slate-800 mb-2">Insight 1: API Compute Choice (Latency)</h3><p class="text-sm text-slate-500 mb-4">Fargate was chosen over Lambda for the user-facing API to eliminate "cold start" latency. This chart simulates the response time for a new user request on an idle system.</p><div class="chart-container"><canvas id="latencyChart"></canvas></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="font-semibold text-slate-800 mb-2">Insight 2: Hybrid Search Efficiency</h3><p class="text-sm text-slate-500 mb-4">Instead of a brute-force vector search across all documents, we use a "filter-then-rank" strategy. This dramatically improves speed and relevance by reducing the search space before the heavy AI work begins.</p><div class="space-y-2 text-center font-mono text-sm"><div class="bg-slate-100 p-3 rounded">All Documents (e.g., 1,000,000)</div><p class="text-xl text-slate-400">⬇️</p><div class="bg-sky-100 p-3 rounded"><b>Step 1: Keyword Filter</b> (e.g., `role: "engineer"`)</div><p class="text-xl text-slate-400">⬇️</p><div class="bg-slate-100 p-3 rounded">Filtered Candidates (e.g., 5,000)</div><p class="text-xl text-slate-400">⬇️</p><div class="bg-sky-100 p-3 rounded"><b>Step 2: Semantic Vector Search</b></div><p class="text-xl text-slate-400">⬇️</p><div class="bg-slate-100 p-3 rounded">Top 10 Relevant Results</div></div></div>
+                </div>
+            </section>
+
+            <!-- Live Demo Section -->
+            <section id="demo">
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Live Demo</h2>
+                <p class="text-slate-600 mb-8">This is a functional interface connected to the backend API. Use it to perform natural language queries against the ingested sample data.</p>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <header class="text-center mb-8">
+                        <div class="inline-block bg-purple-100 text-purple-700 p-3 rounded-xl mb-4">
+                            <span class="text-3xl">✨</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-900">Find Anyone, Instantly</h3>
+                        <p class="text-slate-500 mt-2">Ask questions in plain English. Our AI understands what you're looking for.</p>
+                    </header>
+
+                    <div class="max-w-3xl mx-auto">
+                        <div class="mb-4">
+                            <form id="search-form" class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" id="search-input" placeholder="Engineers with cloud experience" class="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus-ring-purple transition-shadow">
+                                <button type="submit" id="search-button" class="flex items-center justify-center bg-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:bg-purple-700 focus:outline-none focus-ring-purple transition-colors disabled:bg-purple-300">Search</button>
+                            </form>
+                        </div>
+                        <div class="flex flex-wrap gap-2 justify-center text-sm text-slate-500 mb-8">
+                            <span class="font-semibold mr-2 text-slate-600">Try:</span>
+                            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Find software engineers in California</button>
+                            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Marketing professionals under 30</button>
+                        </div>
+
+                        <div id="demo-results-section">
+                            <div id="loading-spinner" class="hidden text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div><p class="mt-2 text-sm text-slate-500">Searching...</p></div>
+                            <div id="error-message" class="hidden text-center bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg"><p class="font-bold">Search Failed</p><p id="error-text" class="text-sm"></p></div>
+                            <div id="results-header" class="hidden mb-4"><h4 class="text-xl font-bold text-slate-800">Found <span id="results-count">0</span> users for "<span id="query-display" class="text-purple-600"></span>"</h4></div>
+                            <div id="demo-results-container" class="space-y-3 mt-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <div class="container mx-auto max-w-4xl p-4 md:p-8">
-
-        <!-- Header Section -->
-        <header class="text-center mb-8">
-            <div class="inline-block bg-purple-100 text-purple-600 p-3 rounded-xl mb-4">
-                <!-- Sparkle Icon SVG -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-            </div>
-            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Find Anyone, Instantly</h1>
-            <p class="text-slate-500 mt-2">Ask questions in plain English. Our AI understands what you're looking for.</p>
-        </header>
-
-        <!-- Search Bar Section -->
-        <div class="mb-8">
-            <form id="search-form" class="flex flex-col sm:flex-row gap-2">
-                <input type="text" id="search-input" placeholder="Users living in Europe" class="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus-ring-purple transition-shadow">
-                <button type="submit" id="search-button" class="flex items-center justify-center bg-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-sm hover:bg-purple-700 focus:outline-none focus-ring-purple transition-colors disabled:bg-purple-300">
-                    <!-- Search Icon SVG -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    Search
-                </button>
-            </form>
-        </div>
-
-        <!-- Example Searches Section -->
-        <div id="example-searches" class="flex flex-wrap gap-2 justify-center text-sm text-slate-500">
-            <span class="font-semibold mr-2 text-slate-600">Try:</span>
-            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Find software engineers in California</button>
-            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">Marketing professionals under 30</button>
-            <button class="example-query bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded-full transition-colors">People who worked in healthcare analytics</button>
-        </div>
-
-        <!-- Results Section -->
-        <div id="results-section" class="mt-12">
-            <!-- Loading Spinner (shown during search) -->
-            <div id="loading-spinner" class="hidden text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                <p class="mt-2 text-slate-500">Searching...</p>
-            </div>
-
-            <!-- Error Message (shown on failure) -->
-            <div id="error-message" class="hidden text-center bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
-                <p class="font-bold">Search Failed</p>
-                <p id="error-text" class="text-sm">Could not connect to the search service.</p>
-            </div>
-
-            <!-- Results Header (shown on success) -->
-            <div id="results-header" class="hidden mb-4">
-                <h2 class="text-2xl font-bold text-slate-900">Found <span id="results-count">0</span> users for "<span id="query-display" class="text-purple-600"></span>"</h2>
-            </div>
-            
-            <!-- Results Container (populated with result cards) -->
-            <div id="results-container" class="space-y-4">
-                <!-- Search result cards will be injected here by JavaScript -->
-            </div>
-        </div>
-
-    </div>
+    <!-- Modal for Architecture Details -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4"><div id="modal-content" class="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 relative"><button id="modal-close" class="absolute top-4 right-4 text-slate-500 hover:text-slate-800">&times;</button><h3 id="modal-title" class="text-xl font-bold mb-2">Component Details</h3><div id="modal-body" class="text-sm text-slate-600 space-y-2"></div></div></div>
 
     <script>
-        // --- Configuration ---
-        // IMPORTANT: Change this URL to your deployed FastAPI backend's URL.
-        // For local development, it's typically http://127.0.0.1:8000
-        // For your deployed AWS ALB, it will be the DNS name from Terraform output.
-        const API_BASE_URL = "http://127.0.0.1:8000";
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('modal');
+            const modalClose = document.getElementById('modal-close');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
 
-        // --- DOM Element References ---
-        const searchForm = document.getElementById('search-form');
-        const searchInput = document.getElementById('search-input');
-        const searchButton = document.getElementById('search-button');
-        const exampleButtons = document.querySelectorAll('.example-query');
+            const archDetails = {
+                'node-s3': { title: 'S3 Bucket', body: `<p><b>Role:</b> Raw data storage.</p><p><b>Justification:</b> S3 is the industry standard for durable, scalable, and cost-effective object storage. It serves as the entry point for our event-driven ingestion pipeline. Its integration with Lambda is seamless and robust.</p>` },
+                'node-lambda': { title: 'AWS Lambda (Container Image)', body: `<p><b>Role:</b> Asynchronous data processing and indexing.</p><p><b>Justification:</b> Lambda is perfect for event-driven tasks. It automatically scales with the number of uploaded files. We use a <b>container image deployment</b> to overcome the 250MB size limit, allowing us to package large ML libraries like PyTorch for the embedding model.</p>` },
+                'node-opensearch': { title: 'Amazon OpenSearch Service', body: `<p><b>Role:</b> The core search database.</p><p><b>Justification:</b> OpenSearch was chosen because it provides both a robust keyword search engine and a high-performance k-NN vector search index in a single, managed service. This is the key enabler for our efficient hybrid search strategy.</p>` },
+                'node-fargate': { title: 'AWS Fargate (FastAPI)', body: `<p><b>Role:</b> The synchronous, user-facing API backend.</p><p><b>Justification:</b> Fargate provides an "always-on" serverless container, which is critical for a low-latency user experience. It eliminates Lambda's "cold start" problem, efficiently manages database connections, and keeps the ML models loaded in memory for consistent performance.</p>` },
+                'node-alb': { title: 'Application Load Balancer', body: `<p><b>Role:</b> Manages incoming traffic to the API.</p><p><b>Justification:</b> The ALB provides a stable DNS endpoint, handles SSL termination, and distributes traffic across multiple Fargate containers, enabling high availability and horizontal scaling.</p>` }
+            };
 
-        const resultsSection = document.getElementById('results-section');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const errorMessage = document.getElementById('error-message');
-        const errorText = document.getElementById('error-text');
-        
-        const resultsHeader = document.getElementById('results-header');
-        const resultsCount = document.getElementById('results-count');
-        const queryDisplay = document.getElementById('query-display');
-        const resultsContainer = document.getElementById('results-container');
-
-        // --- Event Listeners ---
-        searchForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const query = searchInput.value.trim();
-            if (query) {
-                performSearch(query);
-            }
-        });
-
-        exampleButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const query = button.textContent;
-                searchInput.value = query;
-                performSearch(query);
-            });
-        });
-
-        /**
-         * Main function to perform the search.
-         * @param {string} queryText The user's search query.
-         */
-        async function performSearch(queryText) {
-            // 1. Set UI to loading state
-            searchButton.disabled = true;
-            loadingSpinner.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-            resultsHeader.classList.add('hidden');
-            resultsContainer.innerHTML = ''; // Clear previous results
-
-            try {
-                // 2. Make the API call to the FastAPI backend
-                const response = await fetch(`${API_BASE_URL}/search`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ query_text: queryText, top_k: 10 }),
+            document.querySelectorAll('.arch-node').forEach(node => {
+                node.addEventListener('click', () => {
+                    const details = archDetails[node.id];
+                    if (details) {
+                        modalTitle.textContent = details.title;
+                        modalBody.innerHTML = details.body;
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-
-                const results = await response.json();
-
-                // 3. Render the results
-                displayResults(results, queryText);
-
-            } catch (error) {
-                // 4. Handle errors
-                console.error('Search failed:', error);
-                errorText.textContent = error.message;
-                errorMessage.classList.remove('hidden');
-            } finally {
-                // 5. Reset UI from loading state
-                loadingSpinner.classList.add('hidden');
-                searchButton.disabled = false;
-            }
-        }
-
-        /**
-         * Renders the search results into the DOM.
-         * @param {Array} results An array of search result objects from the API.
-         * @param {string} queryText The original query text.
-         */
-        function displayResults(results, queryText) {
-            // Update results header
-            resultsCount.textContent = results.length;
-            queryDisplay.textContent = queryText;
-            resultsHeader.classList.remove('hidden');
-
-            if (results.length === 0) {
-                resultsContainer.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-sm"><p class="text-slate-500">No users found matching your query.</p></div>`;
-                return;
-            }
-            
-            // Create and append a card for each result
-            results.forEach(result => {
-                const card = createResultCard(result.profile, result.explanation);
-                resultsContainer.appendChild(card);
             });
-        }
 
-        /**
-         * Creates a single HTML element for a search result card.
-         * @param {object} profile The user profile object.
-         * @param {string} explanation The explanation for the match.
-         * @returns {HTMLElement} A div element representing the result card.
-         */
-        function createResultCard(profile, explanation) {
-            const card = document.createElement('div');
-            card.className = 'bg-white p-6 rounded-lg shadow-sm border border-slate-200';
-            
-            const initial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
-            const skillsHTML = profile.skills.map(skill => `<span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded-full">${skill}</span>`).join(' ');
+            const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+            modalClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) { closeModal(); } });
 
-            card.innerHTML = `
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-12 h-12 bg-purple-100 text-purple-600 flex items-center justify-center rounded-full text-xl font-bold">
-                        ${initial}
+            const latencyChartCtx = document.getElementById('latencyChart').getContext('2d');
+            new Chart(latencyChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['API Compute Choice'],
+                    datasets: [ { label: 'Lambda (Cold Start)', data: [1800], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }, { label: 'Fargate (Always On)', data: [150], backgroundColor: 'rgba(34, 197, 94, 0.6)', borderColor: 'rgba(34, 197, 94, 1)', borderWidth: 1 } ]
+                },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Response Time (ms)' } } }, plugins: { tooltip: { callbacks: { label: function(context) { return `${context.dataset.label}: ${context.raw} ms`; } } } } }
+            });
+
+            const API_BASE_URL = "http://127.0.0.1:8000";
+            const searchForm = document.getElementById('search-form');
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const exampleButtons = document.querySelectorAll('.example-query');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const resultsHeader = document.getElementById('results-header');
+            const resultsCount = document.getElementById('results-count');
+            const queryDisplay = document.getElementById('query-display');
+            const demoResultsContainer = document.getElementById('demo-results-container');
+
+            const handleSearchSubmit = (event) => {
+                event.preventDefault();
+                const query = searchInput.value.trim();
+                if (query) { performSearch(query); }
+            };
+
+            searchForm.addEventListener('submit', handleSearchSubmit);
+
+            exampleButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const query = button.textContent;
+                    searchInput.value = query;
+                    performSearch(query);
+                });
+            });
+
+            async function performSearch(queryText) {
+                searchButton.disabled = true;
+                loadingSpinner.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                resultsHeader.classList.add('hidden');
+                demoResultsContainer.innerHTML = '';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query_text: queryText, top_k: 10 }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    const results = await response.json();
+                    displayResults(results, queryText);
+                } catch (error) {
+                    console.error('Search failed:', error);
+                    errorText.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingSpinner.classList.add('hidden');
+                    searchButton.disabled = false;
+                }
+            }
+
+            function displayResults(results, queryText) {
+                resultsCount.textContent = results.length;
+                queryDisplay.textContent = queryText;
+                resultsHeader.classList.remove('hidden');
+
+                if (results.length === 0) {
+                    demoResultsContainer.innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-sm"><p class="text-slate-500">No users found matching your query.</p></div>`;
+                    return;
+                }
+                results.forEach(result => {
+                    const card = createResultCard(result.profile, result.explanation);
+                    demoResultsContainer.appendChild(card);
+                });
+            }
+
+            function createResultCard(profile, explanation) {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
+                const initial = profile.name ? profile.name.charAt(0).toUpperCase() : '?';
+                const skillsHTML = (profile.skills || []).map(skill => `<span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-1 rounded-full">${skill}</span>`).join(' ');
+                card.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-full text-lg font-bold">${initial}</div>
+                        <div class="flex-grow">
+                            <h3 class="font-semibold text-slate-900">${profile.name || 'N/A'}</h3>
+                            <p class="text-sm text-slate-500">${profile.role || 'No role specified'}</p>
+                            <p class="text-sm text-slate-500">${profile.location || 'No location specified'}</p>
+                        </div>
                     </div>
-                    <div class="flex-grow">
-                        <h3 class="text-lg font-semibold text-slate-900">${profile.name || 'N/A'}</h3>
-                        <p class="text-sm text-slate-500">${profile.role || 'No role specified'}</p>
-                        <p class="text-sm text-slate-500">${profile.location || 'No location specified'}</p>
-                    </div>
-                </div>
-                <div class="mt-4 p-3 bg-slate-50 rounded-md border border-slate-200">
-                    <p class="text-sm text-slate-600"><span class="font-semibold">Why this matches:</span> ${explanation}</p>
-                </div>
-                <div class="mt-4">
-                    <p class="text-sm text-slate-600">${profile.notes || ''}</p>
-                </div>
-                ${profile.skills.length > 0 ? `<div class="mt-4 flex flex-wrap gap-2">${skillsHTML}</div>` : ''}
-            `;
-            return card;
-        }
+                    <div class="mt-3 p-2 bg-slate-50 rounded-md border border-slate-200"><p class="text-xs text-slate-600"><span class="font-semibold">Match Rationale:</span> ${explanation}</p></div>
+                    ${profile.notes ? `<div class="mt-3"><p class="text-sm text-slate-600 italic">"${profile.notes}"</p></div>` : ''}
+                    ${(profile.skills || []).length > 0 ? `<div class="mt-3 flex flex-wrap gap-2">${skillsHTML}</div>` : ''}`;
+                return card;
+            }
+        });
     </script>
 </body>
 </html>

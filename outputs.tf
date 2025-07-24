@@ -17,7 +17,12 @@ output "opensearch_domain_endpoint" {
   value       = aws_opensearch_domain.search_cluster.endpoint
 }
 
-output "ecr_repository_url" {
+output "api_ecr_repository_url" {
   description = "The URL of the ECR repository for the API Docker image."
   value       = aws_ecr_repository.api_repo.repository_url
+}
+
+output "lambda_ecr_repository_url" {
+  description = "The URL of the ECR repository for the Lambda Docker image."
+  value       = aws_ecr_repository.lambda_repo.repository_url
 }

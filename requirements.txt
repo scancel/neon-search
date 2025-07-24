@@ -7,3 +7,4 @@ boto3
 pandas
 python-multipart
 openai
+awscli-local

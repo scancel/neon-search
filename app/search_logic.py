@@ -12,7 +12,6 @@ from .config import settings
 from .models import SearchResult
 
 logger = logging.getLogger(__name__)
-aclient = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 # --- Initialize Clients and Models ---
@@ -54,6 +53,7 @@ except Exception as e:
     embedding_model = None
 
 if settings.OPENAI_API_KEY:
+    aclient = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
     logger.info("OpenAI client configured.")
 
 

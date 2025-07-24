@@ -131,9 +131,9 @@ OPENSEARCH_PASSWORD='YourStrongP@ssw0rd!'
 OPENAI_API_KEY='sk-...'
 ```
 
-### 3. Cloud Deployment (AWS with Terraform)
+### 3. Deploy the Infrastructure
 
-You can deploy the AWS infrastructure using the provided Terraform scripts.
+The cloud deployment now requires building and pushing two separate Docker images (one for the API, one for the Lambda) to Amazon ECR.
 
 **a. Create a `terraform.tfvars` file:**
 
@@ -143,44 +143,42 @@ You can deploy the AWS infrastructure using the provided Terraform scripts.
 aws_region = "us-east-1"
 opensearch_master_user = "neouser"
 opensearch_master_password = "YourStrongP@ssw0rd!" # Must match .env
-ecr_image_uri = "YOUR_ECR_IMAGE_URI" # You will fill this in after the next step
+api_image_uri = "YOUR_API_ECR_IMAGE_URI" # You will fill this in
+lambda_image_uri = "YOUR_LAMBDA_ECR_IMAGE_URI" # You will fill this in
 ```
 
-**b. Build and Push the Docker Image:**
+**b. Build and Push the Docker Images:**
 
-First, run Terraform to create just the ECR repository.
+First, run Terraform to create the ECR repositories.
 
 ```bash
 terraform init
-terraform apply -target=aws_ecr_repository.api_repo
+terraform apply -target=aws_ecr_repository.api_repo -target=aws_ecr_repository.lambda_repo
 ```
 
-Now, build and push the Docker image. The `repository_url` will be in the Terraform output.
+Now, build and push each image.
 
 ```bash
-# Get the repository URL from the output
-export REPO_URL=$(terraform output -raw ecr_repository_url)
+# --- Push API Image ---
+export API_REPO_URL=$(terraform output -raw api_ecr_repository_url)
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $API_REPO_URL
+docker build -t $API_REPO_URL:latest -f Dockerfile .
+docker push $API_REPO_URL:latest
 
-# Log in to AWS ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REPO_URL
-
-# Build and tag your Docker image
-docker build -t $REPO_URL:latest .
-
-# Push the image to ECR
-docker push $REPO_URL:latest
+# --- Push Lambda Image ---
+export LAMBDA_REPO_URL=$(terraform output -raw lambda_ecr_repository_url)
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $LAMBDA_REPO_URL
+docker build -t $LAMBDA_REPO_URL:latest -f ingestion_lambda/Dockerfile .
+docker push $LAMBDA_REPO_URL:latest
 ```
 
 **c. Update `terraform.tfvars`:**
-Now that you have the image URI, update the `ecr_image_uri` variable in your `terraform.tfvars` file.
+Now that you have the full image URIs (including the `:latest` tag), update the `api_image_uri` and `lambda_image_uri` variables in your `terraform.tfvars` file.
 
 **d. Deploy Everything:**
+Run `terraform apply` again to create the rest of the infrastructure, which will now use your container images.
 
 ```bash
-# Package the Lambda function
-cd tools && bash pack-lambda.sh
-
-# Deploy all resources
 terraform apply
 ```
 
@@ -223,27 +221,26 @@ AWS_ENDPOINT_URL=http://localstack:4566
 OPENAI_API_KEY=sk-...
 ```
 
-**b. Package the Lambda function:**
-The `docker-compose.yml` file needs a zipped version of the ingestion code.
+**b. Build the Lambda Docker Image:**
+Before starting Docker Compose, you must build the container image for the ingestion Lambda and tag it with a specific name that LocalStack can find.
 
 ```bash
-# Ensure you are in the project root
-cd tools && bash pack-lambda.sh
+docker build -t neon-search-lambda-local:latest -f ingestion_lambda/Dockerfile .
 ```
 
 ### 2. Run the Environment
 
-Start all services (API, OpenSearch, LocalStack) in the background.
+Start all services (API, OpenSearch, LocalStack) in the background. Docker Compose will start the API service, while LocalStack will use the image you just built to create the Lambda function.
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d --build api
 ```
 * The first time you run this, it will download the necessary Docker images, which may take a few minutes.
 * You can view logs for all services with `docker-compose logs -f`.
 
 ### 3. Ingest Data Locally
 
-To populate your local OpenSearch instance, use the `local_ingest.py` script. This script uploads a file to the local S3 (in LocalStack), which in turn triggers the local Lambda function.
+To populate your local OpenSearch instance, use the `local_ingest.py` script. This script uploads a file to the local S3 (in LocalStack), which in turn triggers the local Lambda function running in its container.
 
 ```bash
 # Example: Ingest a sample CSV file
@@ -261,8 +258,9 @@ python tools/local_ingest.py data/users.csv
 When you're finished, you can stop and remove the containers.
 
 ```bash
-docker-compose down
+docker-compose down -v
 ```
+
 
 ---
 

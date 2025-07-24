@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Copy the rest of the application's code to the working directory
 COPY ./app /code/app
+COPY ./frontend /code/frontend
 
 # Command to run the application
 # Uvicorn is a lightning-fast ASGI server, running on port 80

@@ -40,8 +40,18 @@ variable "container_port" {
   default     = 80
 }
 
-variable "ecr_image_uri" {
-  description = "The full URI of the Docker image in ECR (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest)."
+# variable "ecr_image_uri" {
+#   description = "The full URI of the Docker image in ECR (e.g., 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest)."
+#   type        = string
+#   default     = "061785417701.dkr.ecr.us-east-1.amazonaws.com/neon-search:latest"
+# }
+
+variable "api_image_uri" {
+  description = "The full URI of the FastAPI API Docker image in ECR."
   type        = string
-  default     = "061785417701.dkr.ecr.us-east-1.amazonaws.com/neon-search:latest"
+}
+
+variable "lambda_image_uri" {
+  description = "The full URI of the Lambda Ingestion Docker image in ECR."
+  type        = string
 }

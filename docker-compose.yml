@@ -9,6 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    platform: linux/amd64 # Ensure API runs on the same platform
     container_name: neon-search-api
     ports:
       - "8000:80"
@@ -25,6 +26,7 @@ services:
   # OpenSearch for local search and indexing
   opensearch:
     image: opensearchproject/opensearch:2.11.1
+    platform: linux/amd64 # Ensure OpenSearch runs on the same platform
     container_name: opensearch-node
     environment:
       - cluster.name=opensearch-cluster
@@ -52,6 +54,7 @@ services:
   # LocalStack to emulate AWS services (S3, Lambda)
   localstack:
     image: localstack/localstack:latest
+    platform: linux/amd64 # <-- CRITICAL FIX: Force x86_64 architecture
     container_name: localstack-main
     ports:
       - "4566:4566" # Main gateway for all services
@@ -63,8 +66,7 @@ services:
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./tools/localstack:/etc/localstack/init/ready.d" # Mount init scripts
-      - "./ingestion_lambda.zip:/tmp/ingestion_lambda.zip" # Mount Lambda code
+      - "./tools:/etc/localstack/init/ready.d" # Mount init scripts directory
     networks:
       - local-dev-net
 
